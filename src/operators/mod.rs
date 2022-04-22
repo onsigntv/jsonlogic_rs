@@ -6,8 +6,11 @@ mod and;
 mod cat;
 mod division;
 mod double_negation;
+mod ends_with;
 mod equality;
 mod filter;
+mod geo_any_in;
+mod geo_in;
 mod greater_equal_than;
 mod greater_than;
 mod if_else;
@@ -16,6 +19,7 @@ mod less_equal_than;
 mod less_than;
 mod log;
 mod logic;
+mod logic_geo;
 mod map;
 mod max;
 mod merge;
@@ -29,11 +33,15 @@ mod none;
 mod not_equal;
 mod or;
 mod reduce;
+mod regex_match;
 mod some;
+mod starts_with;
 mod strict_equality;
 mod strict_not_equal;
 mod substr;
 mod subtraction;
+mod touch;
+mod ts_repeat;
 mod variable;
 
 use serde_json::Value;
@@ -173,6 +181,13 @@ pub enum Operator {
     /// `var` operations inside the second argument expression are relative to the array element
     /// being tested.
     None,
+    GeoIn,
+    GeoAnyIn,
+    Touch,
+    TsRepeat,
+    RegexMatch,
+    StartsWith,
+    EndsWith,
 }
 
 impl Operator {
@@ -214,6 +229,13 @@ impl Operator {
             "all" => Some(Operator::All),
             "some" => Some(Operator::Some),
             "none" => Some(Operator::None),
+            ">.<" => Some(Operator::GeoIn),
+            "><" => Some(Operator::GeoAnyIn),
+            ">t<" => Some(Operator::Touch),
+            "tsrep" => Some(Operator::TsRepeat),
+            "match" => Some(Operator::RegexMatch),
+            "*=" => Some(Operator::StartsWith),
+            "=*" => Some(Operator::EndsWith),
             _ => None,
         }
     }
@@ -254,6 +276,13 @@ impl Operator {
             Operator::Substr => substr::compute,
             Operator::Subtraction => subtraction::compute,
             Operator::Variable => variable::compute,
+            Operator::GeoIn => geo_in::compute,
+            Operator::GeoAnyIn => geo_any_in::compute,
+            Operator::Touch => touch::compute,
+            Operator::TsRepeat => ts_repeat::compute,
+            Operator::RegexMatch => regex_match::compute,
+            Operator::StartsWith => starts_with::compute,
+            Operator::EndsWith => ends_with::compute,
         };
 
         compute_fn(args, data)
@@ -304,5 +333,12 @@ mod tests {
         assert_eq!(Operator::from_str("all"), Some(Operator::All));
         assert_eq!(Operator::from_str("none"), Some(Operator::None));
         assert_eq!(Operator::from_str("some"), Some(Operator::Some));
+        assert_eq!(Operator::from_str(">.<"), Some(Operator::GeoIn));
+        assert_eq!(Operator::from_str("><"), Some(Operator::GeoAnyIn));
+        assert_eq!(Operator::from_str(">t<"), Some(Operator::Touch));
+        assert_eq!(Operator::from_str("tsrep"), Some(Operator::TsRepeat));
+        assert_eq!(Operator::from_str("match"), Some(Operator::RegexMatch));
+        assert_eq!(Operator::from_str("*="), Some(Operator::StartsWith));
+        assert_eq!(Operator::from_str("=*"), Some(Operator::EndsWith));
     }
 }

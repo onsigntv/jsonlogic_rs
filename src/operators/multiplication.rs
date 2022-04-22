@@ -14,9 +14,7 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
             let mut result = 1f64;
 
             for arg in args {
-                // Use parseFloat like in the javascript implementation.
-                // parseFloat(null) is NaN, whereas coerce_to_f64 would return 0.
-                match logic::parse_float(&arg.compute(data)) {
+                match logic::coerce_to_f64(&arg.compute(data)) {
                     Some(num) => result *= num,
                     None => return Value::Null,
                 }

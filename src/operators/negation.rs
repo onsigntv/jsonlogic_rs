@@ -1,10 +1,10 @@
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use super::{logic, Data, Expression};
 
 /// Logical negation ("not"). Takes just one argument.
 pub fn compute(args: &[Expression], data: &Data) -> Value {
-    let a = args.get(0).map(|a| a.compute(data)).unwrap_or(json!(null));
+    let a = args.get(0).map(|a| a.compute(data)).unwrap_or(Value::Null);
 
     Value::Bool(!logic::is_truthy(&a))
 }
@@ -13,6 +13,7 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
 mod tests {
     use super::*;
     use crate::compute_const;
+    use serde_json::json;
 
     #[test]
     fn test() {

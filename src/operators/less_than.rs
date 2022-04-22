@@ -15,7 +15,10 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
 
     let result = match args.get(2) {
         Some(c) => compute_between_exclusive(&a, &b, &c.compute(data)),
-        None => compute_less_than(&a, &b),
+        None => match (a, b) {
+            (Value::Null, _) | (_, Value::Null) => false,
+            (a, b) => compute_less_than(&a, &b),
+        },
     };
 
     Value::Bool(result)

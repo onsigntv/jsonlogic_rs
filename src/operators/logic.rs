@@ -6,7 +6,7 @@ pub fn is_truthy(value: &Value) -> bool {
         Value::Array(arr) => !arr.is_empty(),
         Value::Bool(b) => *b,
         Value::Null => false,
-        Value::Number(num) => num.as_f64().unwrap() != 0f64,
+        Value::Number(num) => num.as_f64().unwrap() != 0.0,
         Value::Object(_) => true,
         Value::String(s) => s != "",
     }
@@ -77,7 +77,6 @@ pub fn less_than(a: &Value, b: &Value) -> bool {
     use Value::*;
 
     match (a, b) {
-        (Null, Null) => false,
         (Bool(false), Bool(true)) => true,
         (Bool(_), Bool(_)) => false,
         (Object(_), _) | (_, Object(_)) => false,
@@ -90,12 +89,13 @@ pub fn less_than(a: &Value, b: &Value) -> bool {
         }
         // Combinations where both operands will be coerced to numbers:
         //   In every other combination the operands will be converted to numbers in the end. (4.)
-        (Null, _) | (_, Null) | (Number(_), _) | (_, Number(_)) | (Bool(_), _) | (_, Bool(_)) => {
+        (Number(_), _) | (_, Number(_)) | (Bool(_), _) | (_, Bool(_)) => {
             match (coerce_to_f64(a), coerce_to_f64(b)) {
                 (Some(a), Some(b)) => a < b,
                 _ => false,
             }
         }
+        _ => false,
     }
 }
 
@@ -127,7 +127,7 @@ pub fn coerce_to_str(val: &Value) -> String {
 pub fn coerce_to_f64(val: &Value) -> Option<f64> {
     match val {
         Value::Array(arr) => match &arr[..] {
-            [] => Some(0f64),
+            [] => Some(0.0),
             // I don't really understand why Number([true]) is NaN but thats the way it is.
             [el] => match el {
                 Value::Array(_) | Value::Null | Value::Number(_) | Value::String(_) => {
@@ -138,14 +138,14 @@ pub fn coerce_to_f64(val: &Value) -> Option<f64> {
             _ => None,
         },
         Value::Bool(true) => Some(1f64),
-        Value::Bool(false) => Some(0f64),
-        Value::Null => Some(0f64),
+        Value::Bool(false) => Some(0.0),
+        Value::Null => Some(0.0),
         Value::Number(num) => num.as_f64(),
         Value::Object(_) => None,
         Value::String(s) => {
             let s = s.trim();
             if s == "" {
-                Some(0f64)
+                Some(0.0)
             } else {
                 s.parse::<f64>().ok()
             }
@@ -169,7 +169,7 @@ pub fn coerce_to_f64(val: &Value) -> Option<f64> {
 ///       trailing n character is discarded.
 ///
 /// This function does not support BigInt syntax, since JSON does not support it.
-pub fn parse_float(val: &Value) -> Option<f64> {
+pub fn _parse_float(val: &Value) -> Option<f64> {
     match val {
         Value::Number(num) => Some(num.as_f64().unwrap()),
         Value::String(s) => {
@@ -492,72 +492,38 @@ mod tests {
             assert_eq!(less_than(&json!([1]), &json!("12")), true);
             assert_eq!(less_than(&json!([2]), &json!("12")), false);
         }
-
-        #[test]
-        fn with_null() {
-            // null < *, * is converted to number, null is treated as 0
-            macro_rules! null_less_than {
-                ($a:expr, $b:expr) => {
-                    assert_eq!(less_than(&json!(null), &json!($a)), $b);
-                };
-            }
-
-            macro_rules! is_less_than_null {
-                ($a:expr, $b:expr) => {
-                    assert_eq!(less_than(&json!($a), &json!(null)), $b);
-                };
-            }
-
-            null_less_than!(1, true);
-            null_less_than!("5", true);
-            null_less_than!(true, true);
-
-            null_less_than!({}, false);
-            null_less_than!([-5], false);
-            null_less_than!(["-5"], false);
-            null_less_than!([5], true);
-            null_less_than!(["5"], true);
-
-            is_less_than_null!(-1, true);
-            is_less_than_null!(1, false);
-            is_less_than_null!("-1", true);
-            is_less_than_null!("1", false);
-
-            is_less_than_null!({}, false);
-            is_less_than_null!([-5], true);
-            is_less_than_null!(["-5"], true);
-            is_less_than_null!([5], false);
-            is_less_than_null!(["5"], false);
-        }
     }
 
     #[allow(clippy::approx_constant)]
-    mod parse_float {
+    mod _parse_float {
         use super::*;
 
         #[test]
         fn success() {
             let result = Some(3.14);
 
-            assert_eq!(parse_float(&json!(3.14)), result);
-            assert_eq!(parse_float(&json!("3.14")), result);
-            assert_eq!(parse_float(&json!("3.14.5")), result);
-            assert_eq!(parse_float(&json!("  3.14  ")), result);
-            assert_eq!(parse_float(&json!("314e-2")), result);
-            assert_eq!(parse_float(&json!("0.0314E+2")), result);
-            assert_eq!(parse_float(&json!("0.0314e+2")), result);
-            assert_eq!(parse_float(&json!("3.14some non-digit characters")), result);
+            assert_eq!(_parse_float(&json!(3.14)), result);
+            assert_eq!(_parse_float(&json!("3.14")), result);
+            assert_eq!(_parse_float(&json!("3.14.5")), result);
+            assert_eq!(_parse_float(&json!("  3.14  ")), result);
+            assert_eq!(_parse_float(&json!("314e-2")), result);
+            assert_eq!(_parse_float(&json!("0.0314E+2")), result);
+            assert_eq!(_parse_float(&json!("0.0314e+2")), result);
+            assert_eq!(
+                _parse_float(&json!("3.14some non-digit characters")),
+                result
+            );
         }
 
         #[test]
         fn nan() {
-            assert_eq!(parse_float(&json!("FF2")), None);
+            assert_eq!(_parse_float(&json!("FF2")), None);
         }
 
         #[test]
         fn sign() {
-            assert_eq!(parse_float(&json!("+3.14")), Some(3.14));
-            assert_eq!(parse_float(&json!("-3.14")), Some(-3.14));
+            assert_eq!(_parse_float(&json!("+3.14")), Some(3.14));
+            assert_eq!(_parse_float(&json!("-3.14")), Some(-3.14));
         }
     }
 
@@ -628,16 +594,16 @@ mod tests {
         assert_eq!(coerce_to_f64(&json!([[[5]]])), Some(5f64));
         assert_eq!(coerce_to_f64(&json!([[[5], 6]])), None);
         assert_eq!(coerce_to_f64(&json!([[[1, 2]]])), None);
-        assert_eq!(coerce_to_f64(&json!(null)), Some(0f64));
+        assert_eq!(coerce_to_f64(&json!(null)), Some(0.0));
         assert_eq!(coerce_to_f64(&json!(true)), Some(1f64));
         assert_eq!(coerce_to_f64(&json!([true])), None);
-        assert_eq!(coerce_to_f64(&json!(false)), Some(0f64));
+        assert_eq!(coerce_to_f64(&json!(false)), Some(0.0));
         assert_eq!(coerce_to_f64(&json!([false])), None);
         assert_eq!(coerce_to_f64(&json!("1")), Some(1f64));
         assert_eq!(coerce_to_f64(&json!("1.1")), Some(1.1));
         assert_eq!(coerce_to_f64(&json!("1.8")), Some(1.8));
         assert_eq!(coerce_to_f64(&json!(["1"])), Some(1f64));
-        assert_eq!(coerce_to_f64(&json!(null)), Some(0f64));
-        assert_eq!(coerce_to_f64(&json!([null])), Some(0f64));
+        assert_eq!(coerce_to_f64(&json!(null)), Some(0.0));
+        assert_eq!(coerce_to_f64(&json!([null])), Some(0.0));
     }
 }

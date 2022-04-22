@@ -110,14 +110,14 @@ fn reduce() {
     ]});
     assert_eq!(apply(&rule, &json!({ "integers": 5 })), Ok(json!(0)));
 
-    // Default for initial value should be null.
+    // Default for initial value should be 0.
     let rule = json!({ "reduce": [
         { "var": "integers" },
         { "+": [{ "var": "current" }, { "var": "accumulator" }] }
     ]});
     assert_eq!(
         apply(&rule, &json!({ "integers": [1, 2, 3, 4, 5] })),
-        Ok(json!(null))
+        Ok(json!(15.0))
     );
 
     // Return null without reducer.
@@ -265,4 +265,10 @@ fn none() {
 
     let rule = json!({ "none": ["bbb", { "===": [{ "var": "" }, "a"] }] });
     assert_eq!(apply(&rule, &json!(null)), Ok(json!(true)));
+}
+
+#[test]
+fn bool_value() {
+    assert_eq!(apply(&json!({"!": []}), &json!({})), Ok(json!(true)));
+    assert_eq!(apply(&json!({"!!": []}), &json!({})), Ok(json!(false)));
 }

@@ -42,6 +42,10 @@ See the [`examples`](https://github.com/marvindv/jsonlogic_rs/tree/master/exampl
 **jsonlogic_rs** supports all JsonLogic operations. For detailed informations about all operations and their arguments, head over to [Supported Operations](http://jsonlogic.com/operations.html) on
 [jsonlogic.com](http://jsonlogic.com/).
 
+It does differ quite a bit in how null values are handled though.
+Regardless of null or missing input, we never return a null value from an operation.
+Most of these changes can be checked through the [null tests file](tests/null.rs).
+
 For Rust usage examples and edge cases have a look at the linked tests for each operator below.
 
 * Accessing Data
@@ -75,3 +79,19 @@ For Rust usage examples and edge cases have a look at the linked tests for each 
     - [`substr`](https://github.com/marvindv/jsonlogic_rs/blob/master/tests/string.rs#L35)
 * Miscellaneous
     - [`log`](https://github.com/marvindv/jsonlogic_rs/blob/master/tests/misc.rs#L5)
+
+## Additional Operators
+
+Besides the default operators, this repo also implements a few new operators:
+
+- `><`: Receives a geo-coordinate and a list of region objects, and checks whether the coordinate is inside the any region.
+- `>.<`: Receives a geo-coordinate and a region object, and checks whether the coordinate is inside the region.
+- `>t<`: Receives a point, in virtual coordinates from 0 to 100_000 and a rectangle array of [x, y, width, height], to determine wether the point
+  is within the rectangle. Third parameter is optional for mapping the rectangle to a different area of the plane. Returns a boolean.
+- `tsrep`: Receives the current unix timestamp, a timestamp from the start of the day and a repetition value to determine wether the current
+  timestamp is a repeating point within the day. Returns a boolean.
+- `match`: Checks whether the first parameter matches a regular expression in the second parameter. Returns the match array or `null`.
+- `*=`: Checks whether the first argument starts with the second argument
+- `=*`: Checks whether the first argument ends with the second argument
+
+You can find examples on how to use these operators on the test files [`geo`](tests/geo.rs), [`time`](tests/time.rs) and [`string_extra`](tests/string_extra.rs).

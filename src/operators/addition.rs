@@ -6,14 +6,13 @@ use super::{logic, Data, Expression};
 /// will be cast to a number. Returns `Value::Null` if one argument cannot be coerced into a
 /// number.
 pub fn compute(args: &[Expression], data: &Data) -> Value {
-    let mut result = 0f64;
+    let mut result = 0.0;
 
     for arg in args.iter() {
         // Use parseFloat like in the javascript implementation.
         // parseFloat(null) is NaN, whereas coerce_to_f64 would return 0.
-        match logic::parse_float(&arg.compute(data)) {
-            Some(num) => result += num,
-            None => return Value::Null,
+        if let Some(num) = logic::coerce_to_f64(&arg.compute(data)) {
+            result += num;
         }
     }
 
@@ -29,8 +28,8 @@ mod tests {
     #[test]
     fn test() {
         assert_eq!(compute_const!(), json!(0.0));
-        assert_eq!(compute_const!(Value::Null), Value::Null);
-        assert_eq!(compute_const!(json!("foo")), Value::Null);
+        assert_eq!(compute_const!(json!(null)), json!(0.0));
+        assert_eq!(compute_const!(json!("foo")), json!(0.0));
         assert_eq!(compute_const!(json!("6")), json!(6.0));
         assert_eq!(compute_const!(json!(4), json!(2)), json!(6.0));
         assert_eq!(

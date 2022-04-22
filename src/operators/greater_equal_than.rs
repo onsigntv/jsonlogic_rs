@@ -13,5 +13,8 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
         None => return Value::Bool(false),
     };
 
-    Value::Bool(logic::greater_equal_than(&a, &b))
+    match (a, b) {
+        (Value::Null, _) | (_, Value::Null) => Value::Bool(false),
+        (a, b) => Value::Bool(logic::greater_equal_than(&a, &b)),
+    }
 }

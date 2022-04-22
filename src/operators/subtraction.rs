@@ -6,32 +6,21 @@ use super::{logic, Data, Expression};
 /// If only one argument is passed, returns the negation of that argument.
 /// Returns `Value::Null` one of the arguments cannot be coerced into a number.
 pub fn compute(args: &[Expression], data: &Data) -> Value {
-    let a = match args.get(0).map(|arg| arg.compute(data)) {
-        Some(arg) => arg,
-        None => return Value::Null,
-    };
+    let mut result = args
+        .first()
+        .and_then(|v| logic::coerce_to_f64(&v.compute(data)))
+        .unwrap_or(0.0);
 
-    match args.get(1).map(|arg| arg.compute(data)) {
-        None => compute_negation(&logic::coerce_to_f64(&a)),
-        Some(b) => compute_substraction(&logic::coerce_to_f64(&a), &logic::coerce_to_f64(&b)),
+    for arg in args.iter().skip(1) {
+        // Use parseFloat like in the javascript implementation.
+        // parseFloat(null) is NaN, whereas coerce_to_f64 would return 0.
+        match logic::coerce_to_f64(&arg.compute(data)) {
+            Some(num) => result -= num,
+            None => return Value::Null,
+        }
     }
-}
 
-fn compute_negation(a: &Option<f64>) -> Value {
-    match a {
-        Some(a) => Value::Number(Number::from_f64(-1f64 * a).unwrap()),
-        None => Value::Null,
-    }
-}
-
-fn compute_substraction(a: &Option<f64>, b: &Option<f64>) -> Value {
-    match (a, b) {
-        (Some(a), Some(b)) => match Number::from_f64(a - b) {
-            Some(num) => Value::Number(num),
-            None => Value::Null,
-        },
-        _ => Value::Null,
-    }
+    Value::Number(Number::from_f64(result).unwrap())
 }
 
 #[cfg(test)]
@@ -39,23 +28,6 @@ mod tests {
     use super::*;
     use crate::compute_const;
     use serde_json::json;
-
-    #[test]
-    fn null() {
-        assert_eq!(compute_const!(), Value::Null);
-        assert_eq!(compute_const!(json!("a")), Value::Null);
-    }
-
-    #[test]
-    fn negation() {
-        assert_eq!(compute_const!(json!(1)), json!(-1.0));
-        assert_eq!(compute_const!(json!("")), json!(-0.0));
-        assert!(logic::is_strict_equal(
-            &compute_const!(json!("")),
-            &json!(0)
-        ));
-        assert_eq!(compute_const!(json!("-5")), json!(5.0));
-    }
 
     #[test]
     fn substraction() {

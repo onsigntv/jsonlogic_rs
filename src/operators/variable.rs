@@ -8,11 +8,7 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
         .map(|arg| arg.compute(data))
         .unwrap_or(Value::Null);
 
-    if arg.is_null() {
-        return data.get_plain().clone();
-    }
-
-    match &arg {
+    match arg {
         // Return the whole data object if there is no argument given or the argument is an empty
         // string.
         Value::Null => data.get_plain().clone(),
