@@ -23,6 +23,7 @@ struct GeoPoint {
 }
 
 #[derive(Deserialize, Debug)]
+#[serde(untagged)]
 enum GeoShape {
     Circle(GeoCircle),
     Polygon(GeoPolygon),
@@ -82,7 +83,7 @@ impl GeoShape {
 }
 
 pub fn is_within_region(a: Value, b: Value) -> bool {
-    let shape_a: GeoShape = serde_json::from_value(a).unwrap_or(GeoShape::Null);
+    let shape_a: GeoShape = serde_json::from_value(a).unwrap();
     let shape_b: GeoShape = serde_json::from_value(b).unwrap_or(GeoShape::Null);
     shape_b.contains(&shape_a)
 }
@@ -119,10 +120,6 @@ fn ray_crosses_segment<'a>(point: &GeoPoint, mut a: &'a GeoPoint, mut b: &'a Geo
         py += 0.00000001;
     }
     if py > by || py < ay || px >= ax.max(bx) {
-        println!(
-            "EARLY RETURN: {}, {}, {}, {}, {}, {}",
-            py, ay, by, px, ax, bx
-        );
         return false;
     }
     if px < ax.min(bx) {

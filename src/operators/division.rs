@@ -1,11 +1,11 @@
-use serde_json::{json, Number, Value};
+use serde_json::{json, Value};
 
 use super::{logic, Data, Expression};
 
 /// "/", takes two arguments that are coerced into numbers. Returns `Value::Null` if the divisor is
 /// coerced to `0` or one argument cannot be coerced into a number.
 pub fn compute(args: &[Expression], data: &Data) -> Value {
-    let a = match args
+    let mut result = match args
         .get(0)
         .map(|arg| arg.compute(data))
         .and_then(|a| logic::coerce_to_f64(&a))
@@ -14,18 +14,17 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
         None => return json!(0.0),
     };
 
-    let b = match args
-        .get(1)
-        .map(|arg| arg.compute(data))
-        .and_then(|b| logic::coerce_to_f64(&b))
-    {
-        Some(b) => b,
-        None => return json!(a),
-    };
+    for arg in args.iter().skip(1) {
+        match logic::coerce_to_f64(&arg.compute(data)) {
+            Some(num) => result /= num,
+            None => return json!(0.0),
+        }
+    }
 
-    match Number::from_f64(a / b) {
-        Some(num) => Value::Number(num),
-        None => json!(0.0),
+    if result.is_finite() {
+        json!(result)
+    } else {
+        json!(0.0)
     }
 }
 

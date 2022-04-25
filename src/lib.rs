@@ -9,6 +9,8 @@ use std::collections::HashSet;
 
 use data::Data;
 
+pub use operators::logic::is_truthy;
+
 /// Applies the given JsonLogic rule to the specified data.
 /// If the rule does not use any variables, you may pass `&Value::Null` as the second argument.
 ///

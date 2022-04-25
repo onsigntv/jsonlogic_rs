@@ -1,4 +1,4 @@
-use serde_json::{Number, Value};
+use serde_json::{json, Value};
 
 use super::{logic, Data, Expression};
 
@@ -8,7 +8,7 @@ use super::{logic, Data, Expression};
 /// javascript implementation of JsonLogic.
 pub fn compute(args: &[Expression], data: &Data) -> Value {
     match args {
-        [] => Value::Null,
+        [] => json!(0.0),
         [arg] => arg.compute(data),
         _ => {
             let mut result = 1f64;
@@ -16,11 +16,11 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
             for arg in args {
                 match logic::coerce_to_f64(&arg.compute(data)) {
                     Some(num) => result *= num,
-                    None => return Value::Null,
+                    None => return json!(0.0),
                 }
             }
 
-            Value::Number(Number::from_f64(result).unwrap())
+            json!(result)
         }
     }
 }
@@ -33,7 +33,7 @@ mod tests {
 
     #[test]
     fn test() {
-        assert_eq!(compute_const!(), Value::Null);
+        assert_eq!(compute_const!(), json!(0.0));
         assert_eq!(compute_const!(Value::Null), Value::Null);
         assert_eq!(compute_const!(json!("foo")), json!("foo"));
         assert_eq!(compute_const!(json!("6")), json!("6"));

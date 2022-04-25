@@ -2,7 +2,7 @@
 name = "jsonlogic"
 version = "0.5.1"
 authors = ["Marvin Davieds <marvin.davieds@gmail.com>"]
-edition = "2018"
+edition = "2021"
 license = "MIT"
 description = "A JsonLogic implementation in Rust"
 repository = "https://github.com/marvindv/jsonlogic_rs"

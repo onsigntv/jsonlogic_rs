@@ -35,7 +35,11 @@ pub fn compute(args: &[Expression], data: &Data) -> Value {
         }
     }
 
-    Value::Array(result.iter().map(|&el| el.clone()).collect())
+    if min_num > 0 {
+        Value::Array(result.iter().map(|&el| el.clone()).collect())
+    } else {
+        Value::Array(vec![])
+    }
 }
 
 #[cfg(test)]

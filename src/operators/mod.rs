@@ -18,7 +18,7 @@ mod is_in;
 mod less_equal_than;
 mod less_than;
 mod log;
-mod logic;
+pub mod logic;
 mod logic_geo;
 mod map;
 mod max;
@@ -203,6 +203,7 @@ impl Operator {
             "!" => Some(Operator::Negation),
             "!!" => Some(Operator::DoubleNegation),
             "if" => Some(Operator::If),
+            "?:" => Some(Operator::If),
             "or" => Some(Operator::Or),
             "and" => Some(Operator::And),
             "<" => Some(Operator::LessThan),
