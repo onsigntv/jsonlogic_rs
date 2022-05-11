@@ -390,16 +390,6 @@
         6
     ],
     [
-        {"reduce":[
-            {"var":"integers"},
-            {"+":[{"var":"current"}, {"var":"accumulator"}]}
-        ]},
-        {"integers":[1,2,3,4]},
-        10
-    ],
-
-
-    [
         {"all":[{"var":"integers"}, {">=":[{"var":""}, 1]}]},
         {"integers":[1,2,3]},
         true

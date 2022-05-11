@@ -63,8 +63,9 @@ impl GeoCircle {
         let d_lat = (point.lat - self.lat) * (PI / 180.0);
         let d_lng = (point.lng - self.lng) * (PI / 180.0);
         let mut a = (d_lat / 2.0).sin().powf(2.0);
-        a += (self.lat * (PI / 180.0)).cos() * (point.lat * (PI / 180.0)).cos();
-        a *= (d_lng / 2.0).sin().powf(2.0);
+        a += (self.lat * (PI / 180.0)).cos() *
+             (point.lat * (PI / 180.0)).cos() *
+             (d_lng / 2.0).sin().powf(2.0);
 
         let c = 2.0 * a.sqrt().atan2((1.0 - a).sqrt());
         let distance = R * c * 1000.0;
