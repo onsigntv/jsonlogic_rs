@@ -32,7 +32,7 @@ enum GeoShape {
 }
 
 impl GeoPolygon {
-    fn contains(&self, point: &GeoPoint) -> bool {
+    fn contains_point(&self, point: &GeoPoint) -> bool {
         if self.path.len() == 0 {
             return false;
         }
@@ -58,7 +58,7 @@ impl GeoPolygon {
 }
 
 impl GeoCircle {
-    fn contains(&self, point: &GeoPoint) -> bool {
+    fn contains_point(&self, point: &GeoPoint) -> bool {
         const R: f64 = 6371.0;
         let d_lat = (point.lat - self.lat) * (PI / 180.0);
         let d_lng = (point.lng - self.lng) * (PI / 180.0);
@@ -74,28 +74,33 @@ impl GeoCircle {
 }
 
 impl GeoShape {
-    fn contains(&self, shape: &GeoShape) -> bool {
-        match (self, shape) {
-            (GeoShape::Polygon(a), GeoShape::Point(b)) => a.contains(b),
-            (GeoShape::Circle(a), GeoShape::Point(b)) => a.contains(b),
+    fn contains_point(&self, point: &GeoPoint) -> bool {
+        match self {
+            GeoShape::Polygon(a) => a.contains_point(point),
+            GeoShape::Circle(a) => a.contains_point(point),
             _ => false,
         }
     }
 }
 
 pub fn is_within_region(a: Value, b: Value) -> bool {
-    let shape_a: GeoShape = serde_json::from_value(a).unwrap();
-    let shape_b: GeoShape = serde_json::from_value(b).unwrap_or(GeoShape::Null);
-    shape_b.contains(&shape_a)
+    let point: GeoPoint = match serde_json::from_value(a) {
+        Ok(value) => value,
+        Err(_) => return false,
+    };
+    let shape: GeoShape = serde_json::from_value(b).unwrap_or(GeoShape::Null);
+    shape.contains_point(&point)
 }
 
 pub fn is_within_regions(a: Value, b: Value) -> bool {
-    let shape_a: GeoShape = serde_json::from_value(a).unwrap_or(GeoShape::Null);
+    let point: GeoPoint = match serde_json::from_value(a) {
+        Ok(value) => value,
+        Err(_) => return false,
+    };
     match b {
-        Value::Array(arr) => arr.into_iter().any(|v| {
-            serde_json::from_value(v)
-                .unwrap_or(GeoShape::Null)
-                .contains(&shape_a)
+        Value::Array(arr) => arr.into_iter().any(|shape| {
+            let shape: GeoShape = serde_json::from_value(shape).unwrap_or(GeoShape::Null);
+            shape.contains_point(&point)
         }),
         _ => false,
     }
@@ -156,7 +161,7 @@ mod tests {
                     (-229.283638, 30.947727)
                 ]
             }
-            .contains(&GeoPoint {
+            .contains_point(&GeoPoint {
                 lat: -222.4721146,
                 lng: 35.8964206
             }),
@@ -172,7 +177,7 @@ mod tests {
                     (-229.283638, 30.947727)
                 ]
             }
-            .contains(&GeoPoint {
+            .contains_point(&GeoPoint {
                 lat: -231.4721146,
                 lng: 35.8964206
             }),
@@ -197,7 +202,7 @@ mod tests {
                     (7.0, 10.0),
                 ]
             }
-            .contains(&GeoPoint { lat: 7.5, lng: 9.9 }),
+            .contains_point(&GeoPoint { lat: 7.5, lng: 9.9 }),
             true
         );
         assert_eq!(
@@ -215,7 +220,7 @@ mod tests {
                     (7.0, 10.0),
                 ]
             }
-            .contains(&GeoPoint { lat: 7.0, lng: 9.9 }),
+            .contains_point(&GeoPoint { lat: 7.0, lng: 9.9 }),
             false
         );
     }
@@ -228,7 +233,7 @@ mod tests {
                 lng: -48.48469,
                 rad: 300.0
             }
-            .contains(&GeoPoint {
+            .contains_point(&GeoPoint {
                 lat: -27.50836,
                 lng: -48.48099
             }),
