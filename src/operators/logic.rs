@@ -7,7 +7,7 @@ pub fn is_truthy(value: &Value) -> bool {
         Value::Bool(b) => *b,
         Value::Null => false,
         Value::Number(num) => num.as_f64().unwrap() != 0.0,
-        Value::Object(_) => true,
+        Value::Object(obj) => !obj.is_empty(),
         Value::String(s) => s != "",
     }
 }
@@ -564,8 +564,7 @@ mod tests {
         assert_eq!(is_truthy(&json!("0")), true);
         assert_eq!(is_truthy(&json!(["0"])), true);
         assert_eq!(is_truthy(&json!(null)), false);
-
-        assert_eq!(is_truthy(&json!({})), true);
+        assert_eq!(is_truthy(&json!({})), false);
         assert_eq!(is_truthy(&json!(true)), true);
         assert_eq!(is_truthy(&json!(false)), false);
     }
