@@ -15,7 +15,7 @@ use super::{Data, Expression};
 pub fn compute(args: &[Expression], data: &Data) -> Value {
     let initial = match args.get(2) {
         Some(expr) => expr.compute(data),
-        None => json!(0.0),
+        None => Value::Null,
     };
     let arr = match args.get(0).map(|arg| arg.compute(data)) {
         Some(Value::Array(arr)) => arr,
